@@ -33,6 +33,18 @@ describe('hasPremiumAccess', () => {
   });
 });
 
+describe('hasPremiumAccess — override rôle paid', () => {
+  it('rôle paid sans abonnement → accès premium', () => {
+    expect(hasPremiumAccess(baseProfile('paid'), null)).toBe(true);
+  });
+  it('rôle free sans abonnement → pas d’accès', () => {
+    expect(hasPremiumAccess(baseProfile('free'), null)).toBe(false);
+  });
+  it('rôle free + abonnement active → accès', () => {
+    expect(hasPremiumAccess(baseProfile('free'), sub('active'))).toBe(true);
+  });
+});
+
 describe('canViewDocumentFile', () => {
   it('document gratuit visible par un compte free', () => {
     expect(canViewDocumentFile(baseProfile('free'), null, doc(false))).toBe(true);
