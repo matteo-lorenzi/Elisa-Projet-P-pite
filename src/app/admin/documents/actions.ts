@@ -27,7 +27,15 @@ export async function createDocument(formData: FormData) {
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
   );
   const bucket = isPremium ? 'documents-premium' : 'documents-free';
-  const path = `${Date.now()}-${file.name}`;
+  // Les clés storage doivent être URL-safe : on retire les accents et on
+  // remplace tout caractère hors [a-z0-9._-] par un tiret.
+  const safeName = file.name
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .replace(/[^a-zA-Z0-9._-]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .toLowerCase();
+  const path = `${Date.now()}-${safeName}`;
   const { error: upErr } = await admin.storage.from(bucket)
     .upload(path, file, { upsert: false });
   if (upErr) redirect(`/admin/documents/new?error=${encodeURIComponent(upErr.message)}`);
