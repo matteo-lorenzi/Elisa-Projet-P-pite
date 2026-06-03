@@ -4,7 +4,7 @@ export function hasPremiumAccess(
   profile: Profile,
   subscription: SubscriptionRow | null,
 ): boolean {
-  if (profile.role === 'admin') return true;
+  if (profile.role === 'admin' || profile.role === 'paid') return true;
   return subscription?.status === 'active';
 }
 
