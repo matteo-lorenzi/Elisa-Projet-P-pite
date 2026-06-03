@@ -38,7 +38,12 @@ export async function GET(
   const path = (doc as DocumentRow).storage_path;
   const { data: signed, error } = await admin.storage.from(bucket).createSignedUrl(path, 60);
   if (error || !signed) {
-    return NextResponse.json({ error: 'signing failed' }, { status: 500 });
+    // Cas le plus courant : le fichier n'existe pas dans le bucket (métadonnées
+    // créées sans upload, ex. seed de démo). On renvoie 404 plutôt qu'un 500 opaque.
+    return NextResponse.json(
+      { error: 'file not found in storage', detail: error?.message },
+      { status: 404 },
+    );
   }
   return NextResponse.json({ url: signed.signedUrl });
 }

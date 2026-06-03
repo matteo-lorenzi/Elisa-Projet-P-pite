@@ -20,7 +20,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   }
   return (
     <html lang="fr" suppressHydrationWarning>
-      <body>
+      <body suppressHydrationWarning>
         <header className="border-b">
           <nav className="mx-auto flex max-w-4xl items-center justify-between p-4 text-sm">
             <Link href="/" className="font-bold">Droit rural</Link>
