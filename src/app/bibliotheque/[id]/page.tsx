@@ -46,9 +46,12 @@ export default async function DocumentPage({
         ) : (
           <div className="rounded border bg-gray-50 p-8 text-center">
             <p className="text-lg">🔒 Ce document est réservé aux abonnés.</p>
-            <p className="mt-2 text-sm text-gray-600">
-              L&apos;abonnement sera disponible prochainement.
-            </p>
+            <Link
+              href="/abonnement"
+              className="mt-4 inline-block rounded bg-black px-4 py-2 text-white"
+            >
+              S’abonner
+            </Link>
           </div>
         )}
       </div>
