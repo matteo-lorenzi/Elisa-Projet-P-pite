@@ -19,7 +19,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     isAdmin = profile?.role === 'admin';
   }
   return (
-    <html lang="fr">
+    <html lang="fr" suppressHydrationWarning>
       <body>
         <header className="border-b">
           <nav className="mx-auto flex max-w-4xl items-center justify-between p-4 text-sm">
