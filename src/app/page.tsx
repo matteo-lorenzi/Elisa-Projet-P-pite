@@ -1,3 +1,5 @@
+import Link from 'next/link';
+
 export default function Home() {
   return (
     <main className="mx-auto max-w-3xl p-8">
@@ -5,9 +7,9 @@ export default function Home() {
       <p className="mt-4 text-gray-600">
         Documents pédagogiques, schémas et newsletter pour comprendre le droit rural.
       </p>
-      <a href="/bibliotheque" className="mt-6 inline-block underline">
+      <Link href="/bibliotheque" className="mt-6 inline-block underline">
         Accéder à la bibliothèque
-      </a>
+      </Link>
     </main>
   );
 }
