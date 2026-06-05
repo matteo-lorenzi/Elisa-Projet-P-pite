@@ -15,6 +15,10 @@ export default async function SignupPage({
           className="border p-2 rounded" />
         <input name="password" type="password" required minLength={6}
           placeholder="Mot de passe" className="border p-2 rounded" />
+        <label className="flex items-center gap-2 text-sm">
+          <input type="checkbox" name="newsletter" value="on" />
+          Recevoir la newsletter (vous pourrez vous désinscrire à tout moment)
+        </label>
         <button className="bg-black text-white p-2 rounded">Créer mon compte</button>
       </form>
       <p className="mt-4 text-sm">

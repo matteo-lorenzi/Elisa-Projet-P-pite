@@ -11,6 +11,13 @@ export interface Profile {
   created_at: string;
 }
 
+export interface NewsletterEdition {
+  id: string;
+  subject: string;
+  body_html: string;
+  sent_at: string | null;
+}
+
 export interface SubscriptionRow {
   user_id: string;
   stripe_customer_id: string | null;
