@@ -4,62 +4,60 @@ import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 import { createClient as createAdminClient } from '@supabase/supabase-js';
-import { renderMarkdown } from '@/lib/markdown';
-import { buildEmailHtml } from '@/lib/newsletter-email';
-import { sendBatch, type OutgoingEmail } from '@/lib/resend';
+import { sendBatch } from '@/lib/resend';
 import { requireAdminAction } from '@/lib/auth/admin';
+import {
+  publishEdition,
+  saveEditionDraft,
+  type NewsletterStore,
+  type Mailer,
+} from '@/lib/newsletter/publish';
 
 async function assertAdmin() {
   await requireAdminAction(await createClient());
 }
 
-function adminDb() {
-  return createAdminClient(
+/** Adapter service-role : destinataires opt-in + historique des éditions. */
+function supabaseStore(): NewsletterStore {
+  const db = createAdminClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
   );
+  return {
+    async listOptInRecipients() {
+      const { data, error } = await db
+        .from('profiles').select('id, email').eq('newsletter_opt_in', true);
+      if (error) throw new Error(error.message);
+      return data ?? [];
+    },
+    async recordEdition(edition) {
+      const { error } = await db.from('newsletter_editions').insert(edition);
+      if (error) throw new Error(error.message);
+    },
+  };
 }
+
+const mailer: Mailer = { send: sendBatch };
 
 export async function saveDraft(formData: FormData) {
   await assertAdmin();
-  const subject = String(formData.get('subject')).trim();
-  const md = String(formData.get('body_md'));
-  if (!subject) throw new Error('sujet requis');
-  const body_html = renderMarkdown(md);
-  const { error } = await adminDb()
-    .from('newsletter_editions').insert({ subject, body_html, sent_at: null });
-  if (error) throw new Error(error.message);
+  await saveEditionDraft(
+    { subject: String(formData.get('subject')), markdown: String(formData.get('body_md')) },
+    { store: supabaseStore() },
+  );
   revalidatePath('/admin/newsletter');
 }
 
 export async function sendEdition(formData: FormData) {
   await assertAdmin();
-  const subject = String(formData.get('subject')).trim();
-  const md = String(formData.get('body_md'));
-  if (!subject) throw new Error('sujet requis');
-  const body_html = renderMarkdown(md);
-
-  const db = adminDb();
-  const { data: recipients, error: recErr } = await db
-    .from('profiles').select('id, email').eq('newsletter_opt_in', true);
-  if (recErr) throw new Error(recErr.message);
-  if (!recipients || recipients.length === 0) {
-    revalidatePath('/admin/newsletter');
-    redirect('/admin/newsletter?msg=' + encodeURIComponent('aucun inscrit'));
-  }
-
-  const emails: OutgoingEmail[] = recipients.map((r) => ({
-    to: r.email,
-    subject,
-    html: buildEmailHtml(body_html, r.id),
-  }));
-  const { sent, failed } = await sendBatch(emails);
-
-  const { error: insErr } = await db
-    .from('newsletter_editions')
-    .insert({ subject, body_html, sent_at: new Date().toISOString() });
-  if (insErr) throw new Error(insErr.message);
-
+  const res = await publishEdition(
+    { subject: String(formData.get('subject')), markdown: String(formData.get('body_md')) },
+    { store: supabaseStore(), mailer },
+  );
   revalidatePath('/admin/newsletter');
-  redirect('/admin/newsletter?msg=' + encodeURIComponent(`envoyé: ${sent}, échecs: ${failed}`));
+  const msg =
+    res.kind === 'no-recipients'
+      ? 'aucun inscrit'
+      : `envoyé: ${res.sent}, échecs: ${res.failed}`;
+  redirect('/admin/newsletter?msg=' + encodeURIComponent(msg));
 }
