@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
-import { createClient as createAdminClient } from '@supabase/supabase-js';
+import { createServiceRoleClient } from '@/lib/supabase/admin';
 import { requireAdminApi } from '@/lib/auth/admin';
 
 function csvField(v: string): string {
@@ -12,10 +12,7 @@ export async function GET() {
   const guard = await requireAdminApi(supabase);
   if (guard instanceof Response) return guard;
 
-  const adminDb = createAdminClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  );
+  const adminDb = createServiceRoleClient();
   const { data } = await adminDb
     .from('profiles')
     .select('email, role, newsletter_opt_in, created_at, subscriptions(status)')

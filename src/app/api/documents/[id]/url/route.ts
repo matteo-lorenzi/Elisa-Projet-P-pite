@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient as createServerClient } from '@/lib/supabase/server';
-import { createClient as createAdminClient } from '@supabase/supabase-js';
+import { createServiceRoleClient } from '@/lib/supabase/admin';
 import { getViewer } from '@/lib/auth/viewer';
 import { canViewDocumentFile } from '@/lib/access';
 import type { DocumentRow } from '@/lib/supabase/types';
@@ -23,10 +23,7 @@ export async function GET(
   if (!allowed) return NextResponse.json({ error: 'forbidden' }, { status: 403 });
 
   // service role : génère l'URL signée sur le bucket privé
-  const admin = createAdminClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  );
+  const admin = createServiceRoleClient();
   const bucket = (doc as DocumentRow).is_premium ? 'documents-premium' : 'documents-free';
   const path = (doc as DocumentRow).storage_path;
   const { data: signed, error } = await admin.storage.from(bucket).createSignedUrl(path, 60);

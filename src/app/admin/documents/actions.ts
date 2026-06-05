@@ -2,7 +2,7 @@
 
 import { redirect } from 'next/navigation';
 import { createClient as createServerClient } from '@/lib/supabase/server';
-import { createClient as createAdminClient } from '@supabase/supabase-js';
+import { createServiceRoleClient } from '@/lib/supabase/admin';
 import { requireAdminPage } from '@/lib/auth/admin';
 
 export async function createDocument(formData: FormData) {
@@ -19,10 +19,7 @@ export async function createDocument(formData: FormData) {
     .split(',').map((t) => t.trim()).filter(Boolean);
   const file = formData.get('file') as File;
 
-  const admin = createAdminClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  );
+  const admin = createServiceRoleClient();
   const bucket = isPremium ? 'documents-premium' : 'documents-free';
   // Les clés storage doivent être URL-safe : on retire les accents et on
   // remplace tout caractère hors [a-z0-9._-] par un tiret.

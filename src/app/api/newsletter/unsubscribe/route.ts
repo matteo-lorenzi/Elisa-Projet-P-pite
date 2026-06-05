@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { createServiceRoleClient } from '@/lib/supabase/admin';
 import { verify } from '@/lib/newsletter-token';
 
 function html(body: string): Response {
@@ -19,10 +19,7 @@ export async function GET(req: NextRequest) {
   if (!userId) {
     return html('<h1>Lien invalide</h1><p>Ce lien de désinscription n\'est pas valide.</p>');
   }
-  const adminDb = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  );
+  const adminDb = createServiceRoleClient();
   const { error } = await adminDb
     .from('profiles').update({ newsletter_opt_in: false }).eq('id', userId);
   if (error) {

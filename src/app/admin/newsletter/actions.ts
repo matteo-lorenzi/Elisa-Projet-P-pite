@@ -3,7 +3,7 @@
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
-import { createClient as createAdminClient } from '@supabase/supabase-js';
+import { createServiceRoleClient } from '@/lib/supabase/admin';
 import { sendBatch } from '@/lib/resend';
 import { requireAdminAction } from '@/lib/auth/admin';
 import {
@@ -19,10 +19,7 @@ async function assertAdmin() {
 
 /** Adapter service-role : destinataires opt-in + historique des éditions. */
 function supabaseStore(): NewsletterStore {
-  const db = createAdminClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  );
+  const db = createServiceRoleClient();
   return {
     async listOptInRecipients() {
       const { data, error } = await db
