@@ -59,4 +59,19 @@ describe('handleStripeEvent', () => {
     await handleStripeEvent(event, { store, stripe: fakeGateway(subObject('x')) });
     expect(rows).toHaveLength(0);
   });
+
+  it('checkout.session.completed sans abonnement → aucun upsert, gateway non appelé', async () => {
+    const { store, rows } = fakeStore();
+    let retrieved = false;
+    const gateway: StripeGateway = {
+      async retrieveSubscription() { retrieved = true; return subObject('x'); },
+    };
+    const event = {
+      type: 'checkout.session.completed',
+      data: { object: { subscription: null } },
+    } as unknown as Stripe.Event;
+    await handleStripeEvent(event, { store, stripe: gateway });
+    expect(rows).toHaveLength(0);
+    expect(retrieved).toBe(false);
+  });
 });

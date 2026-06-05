@@ -1,5 +1,6 @@
 import type Stripe from 'stripe';
 import { subscriptionRowFromStripe } from '../stripe-sync';
+import type { StripeSubscriptionLike } from '../stripe-sync';
 import type { SubscriptionRow } from '../supabase/types';
 
 export interface SubscriptionStore {
@@ -19,8 +20,11 @@ export async function handleStripeEvent(
     case 'checkout.session.completed': {
       const session = event.data.object as Stripe.Checkout.Session;
       if (session.subscription) {
-        const sub = await deps.stripe.retrieveSubscription(session.subscription as string);
-        await deps.store.upsertSubscription(subscriptionRowFromStripe(sub as never));
+        const subId = typeof session.subscription === 'string'
+          ? session.subscription
+          : session.subscription.id;
+        const sub = await deps.stripe.retrieveSubscription(subId);
+        await deps.store.upsertSubscription(subscriptionRowFromStripe(sub as StripeSubscriptionLike));
       }
       break;
     }
@@ -28,7 +32,7 @@ export async function handleStripeEvent(
     case 'customer.subscription.updated':
     case 'customer.subscription.deleted':
       await deps.store.upsertSubscription(
-        subscriptionRowFromStripe(event.data.object as never),
+        subscriptionRowFromStripe(event.data.object as StripeSubscriptionLike),
       );
       break;
     default:
