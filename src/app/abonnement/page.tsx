@@ -1,9 +1,8 @@
-import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
+import { requireViewer } from '@/lib/auth/viewer';
 import { hasPremiumAccess } from '@/lib/access';
 import { createCheckoutSession, createPortalSession } from './actions';
-import type { Profile, SubscriptionRow } from '@/lib/supabase/types';
 
 export default async function AbonnementPage({
   searchParams,
@@ -12,16 +11,8 @@ export default async function AbonnementPage({
 }) {
   const { success, canceled } = await searchParams;
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect('/login');
-
-  const { data: profile } = await supabase
-    .from('profiles').select('*').eq('id', user.id).single();
-  const { data: subscription } = await supabase
-    .from('subscriptions').select('*').eq('user_id', user.id).maybeSingle();
-
-  const sub = subscription as SubscriptionRow | null;
-  const premium = hasPremiumAccess(profile as Profile, sub);
+  const { profile, subscription: sub } = await requireViewer(supabase);
+  const premium = hasPremiumAccess(profile, sub);
 
   return (
     <main className="mx-auto max-w-2xl p-8">

@@ -1,9 +1,10 @@
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
+import { requireViewer } from '@/lib/auth/viewer';
 import { canViewDocumentFile } from '@/lib/access';
 import { PdfViewer } from '@/components/PdfViewer';
-import type { Profile, SubscriptionRow, DocumentRow } from '@/lib/supabase/types';
+import type { DocumentRow } from '@/lib/supabase/types';
 
 export default async function DocumentPage({
   params,
@@ -12,23 +13,13 @@ export default async function DocumentPage({
 }) {
   const { id } = await params;
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect('/login');
-
-  const { data: profile } = await supabase
-    .from('profiles').select('*').eq('id', user.id).single();
-  const { data: subscription } = await supabase
-    .from('subscriptions').select('*').eq('user_id', user.id).maybeSingle();
+  const { profile, subscription } = await requireViewer(supabase);
   const { data: doc } = await supabase
     .from('documents').select('*').eq('id', id).single();
 
   if (!doc) redirect('/bibliotheque');
 
-  const allowed = canViewDocumentFile(
-    profile as Profile,
-    subscription as SubscriptionRow | null,
-    doc as DocumentRow,
-  );
+  const allowed = canViewDocumentFile(profile, subscription, doc as DocumentRow);
 
   return (
     <main className="mx-auto max-w-4xl p-8">

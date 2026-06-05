@@ -1,20 +1,14 @@
 import { NextResponse } from 'next/server';
-import { createClient as createAdminClient } from '@supabase/supabase-js';
+import { createServiceRoleClient } from '@/lib/supabase/admin';
 import { stripe } from '@/lib/stripe';
 import { subscriptionRowFromStripe } from '@/lib/stripe-sync';
 import type Stripe from 'stripe';
 
-function admin() {
-  return createAdminClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  );
-}
-
 async function upsertFromSubscription(sub: Stripe.Subscription) {
   // metadata.user_id est posé à la création du checkout (Task 4).
   const row = subscriptionRowFromStripe(sub as never);
-  const { error } = await admin().from('subscriptions').upsert(row, { onConflict: 'user_id' });
+  const { error } = await createServiceRoleClient()
+    .from('subscriptions').upsert(row, { onConflict: 'user_id' });
   if (error) throw new Error(`upsert subscriptions: ${error.message}`);
 }
 
