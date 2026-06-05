@@ -15,8 +15,14 @@ describe('readEnv', () => {
     const source = complete();
     delete source.RESEND_API_KEY;
     delete source.STRIPE_WEBHOOK_SECRET;
-    expect(() => readEnv(source)).toThrow(/RESEND_API_KEY/);
-    expect(() => readEnv(source)).toThrow(/STRIPE_WEBHOOK_SECRET/);
+    let message = '';
+    try {
+      readEnv(source);
+    } catch (e) {
+      message = (e as Error).message;
+    }
+    expect(message).toMatch(/RESEND_API_KEY/);
+    expect(message).toMatch(/STRIPE_WEBHOOK_SECRET/);
   });
 
   it('traite une chaîne vide comme manquante', () => {
