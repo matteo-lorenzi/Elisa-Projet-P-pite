@@ -16,6 +16,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       <nav className="mb-6 flex gap-4 border-b pb-2 text-sm">
         <Link href="/admin/documents" className="underline">Documents</Link>
         <Link href="/admin/users" className="underline">Utilisateurs</Link>
+        <Link href="/admin/newsletter" className="underline">Newsletter</Link>
       </nav>
       {children}
     </div>
