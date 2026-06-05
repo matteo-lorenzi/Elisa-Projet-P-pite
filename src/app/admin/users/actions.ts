@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 import { createClient as createAdminClient } from '@supabase/supabase-js';
+import { requireAdminAction } from '@/lib/auth/admin';
 import type { Role } from '@/lib/supabase/types';
 
 const ROLES: Role[] = ['free', 'paid', 'admin'];
@@ -13,12 +14,7 @@ export async function setUserRole(formData: FormData) {
   if (!ROLES.includes(role)) throw new Error('rôle invalide');
 
   // Garde : l'appelant doit être admin.
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) throw new Error('non authentifié');
-  const { data: me } = await supabase
-    .from('profiles').select('role').eq('id', user.id).single();
-  if (me?.role !== 'admin') throw new Error('accès refusé');
+  await requireAdminAction(await createClient());
 
   // Écriture via service role.
   const adminDb = createAdminClient(

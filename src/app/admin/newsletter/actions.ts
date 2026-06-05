@@ -7,14 +7,10 @@ import { createClient as createAdminClient } from '@supabase/supabase-js';
 import { renderMarkdown } from '@/lib/markdown';
 import { buildEmailHtml } from '@/lib/newsletter-email';
 import { sendBatch, type OutgoingEmail } from '@/lib/resend';
+import { requireAdminAction } from '@/lib/auth/admin';
 
 async function assertAdmin() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) throw new Error('non authentifié');
-  const { data: me } = await supabase
-    .from('profiles').select('role').eq('id', user.id).single();
-  if (me?.role !== 'admin') throw new Error('accès refusé');
+  await requireAdminAction(await createClient());
 }
 
 function adminDb() {

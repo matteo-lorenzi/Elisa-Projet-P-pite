@@ -3,14 +3,11 @@
 import { redirect } from 'next/navigation';
 import { createClient as createServerClient } from '@/lib/supabase/server';
 import { createClient as createAdminClient } from '@supabase/supabase-js';
+import { requireAdminPage } from '@/lib/auth/admin';
 
 export async function createDocument(formData: FormData) {
   const supabase = await createServerClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect('/login');
-  const { data: profile } = await supabase
-    .from('profiles').select('role').eq('id', user.id).single();
-  if (profile?.role !== 'admin') redirect('/bibliotheque');
+  await requireAdminPage(supabase);
 
   const title = String(formData.get('title'));
   const description = String(formData.get('description') || '') || null;

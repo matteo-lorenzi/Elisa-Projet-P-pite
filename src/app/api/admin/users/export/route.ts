@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import { createClient as createAdminClient } from '@supabase/supabase-js';
+import { requireAdminApi } from '@/lib/auth/admin';
 
 function csvField(v: string): string {
   return `"${v.replace(/"/g, '""')}"`;
@@ -8,11 +9,8 @@ function csvField(v: string): string {
 export async function GET() {
   // Re-check admin (pas seulement le layout — c'est une route directe).
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return new Response('non authentifié', { status: 401 });
-  const { data: me } = await supabase
-    .from('profiles').select('role').eq('id', user.id).single();
-  if (me?.role !== 'admin') return new Response('accès refusé', { status: 403 });
+  const guard = await requireAdminApi(supabase);
+  if (guard instanceof Response) return guard;
 
   const adminDb = createAdminClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
