@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server';
 import { createClient as createServerClient } from '@/lib/supabase/server';
 import { createClient as createAdminClient } from '@supabase/supabase-js';
+import { getViewer } from '@/lib/auth/viewer';
 import { canViewDocumentFile } from '@/lib/access';
-import type { Profile, SubscriptionRow, DocumentRow } from '@/lib/supabase/types';
+import type { DocumentRow } from '@/lib/supabase/types';
 
 export async function GET(
   _req: Request,
@@ -10,23 +11,15 @@ export async function GET(
 ) {
   const { id } = await params;
   const supabase = await createServerClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: 'unauthenticated' }, { status: 401 });
+  const viewer = await getViewer(supabase);
+  if (!viewer) return NextResponse.json({ error: 'unauthenticated' }, { status: 401 });
 
-  const { data: profile } = await supabase
-    .from('profiles').select('*').eq('id', user.id).single();
-  const { data: subscription } = await supabase
-    .from('subscriptions').select('*').eq('user_id', user.id).maybeSingle();
   const { data: doc } = await supabase
     .from('documents').select('*').eq('id', id).single();
 
   if (!doc) return NextResponse.json({ error: 'not found' }, { status: 404 });
 
-  const allowed = canViewDocumentFile(
-    profile as Profile,
-    subscription as SubscriptionRow | null,
-    doc as DocumentRow,
-  );
+  const allowed = canViewDocumentFile(viewer.profile, viewer.subscription, doc as DocumentRow);
   if (!allowed) return NextResponse.json({ error: 'forbidden' }, { status: 403 });
 
   // service role : génère l'URL signée sur le bucket privé
