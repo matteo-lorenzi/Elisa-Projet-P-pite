@@ -2,7 +2,8 @@ import { sign } from './newsletter-token';
 
 /** Compose le HTML final d'un email pour un destinataire (corps + pied désinscription). */
 export function buildEmailHtml(bodyHtml: string, userId: string): string {
-  const base = process.env.NEXT_PUBLIC_SITE_URL ?? '';
+  const base = process.env.NEXT_PUBLIC_SITE_URL;
+  if (!base) throw new Error('NEXT_PUBLIC_SITE_URL manquant');
   const url = `${base}/api/newsletter/unsubscribe?token=${encodeURIComponent(sign(userId))}`;
   return `${bodyHtml}
 <hr style="margin-top:32px;border:none;border-top:1px solid #ddd" />

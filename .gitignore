@@ -43,6 +43,9 @@ yarn-error.log*
 # graphify knowledge graph output
 /graphify-out/
 
+# guardrails / config Claude Code locaux (chemins machine-specifiques)
+/.claude/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

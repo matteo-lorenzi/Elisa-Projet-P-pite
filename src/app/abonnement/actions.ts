@@ -4,7 +4,11 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { stripe } from '@/lib/stripe';
 
-const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000';
+function siteUrl(): string {
+  const base = process.env.NEXT_PUBLIC_SITE_URL;
+  if (!base) throw new Error('NEXT_PUBLIC_SITE_URL manquant');
+  return base;
+}
 
 export async function createCheckoutSession() {
   const supabase = await createClient();
@@ -21,8 +25,8 @@ export async function createCheckoutSession() {
     customer: sub?.stripe_customer_id ?? undefined,
     customer_email: sub?.stripe_customer_id ? undefined : (user.email ?? undefined),
     subscription_data: { metadata: { user_id: user.id } },
-    success_url: `${SITE}/abonnement?success=1`,
-    cancel_url: `${SITE}/abonnement?canceled=1`,
+    success_url: `${siteUrl()}/abonnement?success=1`,
+    cancel_url: `${siteUrl()}/abonnement?canceled=1`,
   });
 
   if (!session.url) throw new Error('Stripe: pas d’URL de checkout');
@@ -41,7 +45,7 @@ export async function createPortalSession() {
 
   const session = await stripe.billingPortal.sessions.create({
     customer: sub.stripe_customer_id,
-    return_url: `${SITE}/abonnement`,
+    return_url: `${siteUrl()}/abonnement`,
   });
   redirect(session.url);
 }

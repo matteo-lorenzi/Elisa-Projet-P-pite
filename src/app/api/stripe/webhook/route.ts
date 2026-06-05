@@ -1,51 +1,40 @@
 import { NextResponse } from 'next/server';
-import { createServiceRoleClient } from '@/lib/supabase/admin';
 import { stripe } from '@/lib/stripe';
-import { subscriptionRowFromStripe } from '@/lib/stripe-sync';
+import { createServiceRoleClient } from '@/lib/supabase/admin';
+import { handleStripeEvent } from '@/lib/stripe/handle-event';
 import type Stripe from 'stripe';
-
-async function upsertFromSubscription(sub: Stripe.Subscription) {
-  // metadata.user_id est posé à la création du checkout (Task 4).
-  const row = subscriptionRowFromStripe(sub as never);
-  const { error } = await createServiceRoleClient()
-    .from('subscriptions').upsert(row, { onConflict: 'user_id' });
-  if (error) throw new Error(`upsert subscriptions: ${error.message}`);
-}
+import type { SubscriptionRow } from '@/lib/supabase/types';
 
 export async function POST(req: Request) {
   const body = await req.text();
   const sig = req.headers.get('stripe-signature');
   if (!sig) return NextResponse.json({ error: 'no signature' }, { status: 400 });
 
+  const secret = process.env.STRIPE_WEBHOOK_SECRET;
+  if (!secret) return NextResponse.json({ error: 'webhook secret manquant' }, { status: 500 });
+
   let event: Stripe.Event;
   try {
-    event = stripe.webhooks.constructEvent(body, sig, process.env.STRIPE_WEBHOOK_SECRET!);
+    event = stripe.webhooks.constructEvent(body, sig, secret);
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'invalid';
     return NextResponse.json({ error: `signature: ${msg}` }, { status: 400 });
   }
 
   try {
-    switch (event.type) {
-      case 'checkout.session.completed': {
-        const session = event.data.object as Stripe.Checkout.Session;
-        if (session.subscription) {
-          const sub = await stripe.subscriptions.retrieve(session.subscription as string);
-          await upsertFromSubscription(sub);
-        }
-        break;
-      }
-      case 'customer.subscription.created':
-      case 'customer.subscription.updated':
-      case 'customer.subscription.deleted': {
-        await upsertFromSubscription(event.data.object as Stripe.Subscription);
-        break;
-      }
-      default:
-        break; // events ignorés : 200 quand même
-    }
+    await handleStripeEvent(event, {
+      store: {
+        async upsertSubscription(row: SubscriptionRow) {
+          const { error } = await createServiceRoleClient()
+            .from('subscriptions').upsert(row, { onConflict: 'user_id' });
+          if (error) throw new Error(`upsert subscriptions: ${error.message}`);
+        },
+      },
+      stripe: {
+        retrieveSubscription: (id) => stripe.subscriptions.retrieve(id),
+      },
+    });
   } catch (err) {
-    // Erreur de traitement → 500 pour que Stripe réessaie (idempotent via upsert).
     const msg = err instanceof Error ? err.message : 'handler error';
     return NextResponse.json({ error: msg }, { status: 500 });
   }
