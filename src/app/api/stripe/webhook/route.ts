@@ -10,9 +10,12 @@ export async function POST(req: Request) {
   const sig = req.headers.get('stripe-signature');
   if (!sig) return NextResponse.json({ error: 'no signature' }, { status: 400 });
 
+  const secret = process.env.STRIPE_WEBHOOK_SECRET;
+  if (!secret) return NextResponse.json({ error: 'webhook secret manquant' }, { status: 500 });
+
   let event: Stripe.Event;
   try {
-    event = stripe.webhooks.constructEvent(body, sig, process.env.STRIPE_WEBHOOK_SECRET!);
+    event = stripe.webhooks.constructEvent(body, sig, secret);
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'invalid';
     return NextResponse.json({ error: `signature: ${msg}` }, { status: 400 });
