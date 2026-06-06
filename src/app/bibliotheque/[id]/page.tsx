@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import { requireViewer } from '@/lib/auth/viewer';
 import { canViewDocumentFile } from '@/lib/access';
 import { PdfViewer } from '@/components/PdfViewer';
+import { buttonClass } from '@/components/ui';
 import type { DocumentRow } from '@/lib/supabase/types';
 
 export default async function DocumentPage({
@@ -14,34 +15,48 @@ export default async function DocumentPage({
   const { id } = await params;
   const supabase = await createClient();
   const { profile, subscription } = await requireViewer(supabase);
-  const { data: doc } = await supabase
+  const { data } = await supabase
     .from('documents').select('*').eq('id', id).single();
 
-  if (!doc) redirect('/bibliotheque');
-
-  const allowed = canViewDocumentFile(profile, subscription, doc as DocumentRow);
+  if (!data) redirect('/bibliotheque');
+  const doc = data as DocumentRow;
+  const allowed = canViewDocumentFile(profile, subscription, doc);
 
   return (
-    <main className="mx-auto max-w-4xl p-8">
-      <Link href="/bibliotheque" className="text-sm underline">← Bibliothèque</Link>
-      <h1 className="mt-2 text-2xl font-bold">{(doc as DocumentRow).title}</h1>
-      {(doc as DocumentRow).author && (
-        <p className="text-sm text-gray-600">Par {(doc as DocumentRow).author}</p>
+    <main className="mx-auto max-w-4xl px-6 py-12">
+      <Link
+        href="/bibliotheque"
+        className="inline-flex items-center gap-1 text-sm text-muted transition hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+      >
+        <span aria-hidden="true">←</span> Bibliothèque
+      </Link>
+
+      <h1 className="mt-3 font-display text-3xl font-semibold tracking-tight text-balance">
+        {doc.title}
+      </h1>
+      {doc.author && (
+        <p className="mt-1 text-sm text-muted">Par {doc.author}</p>
       )}
-      {(doc as DocumentRow).description && (
-        <p className="mt-2">{(doc as DocumentRow).description}</p>
+      {doc.description && (
+        <p className="mt-4 max-w-[65ch] leading-relaxed text-foreground">
+          {doc.description}
+        </p>
       )}
-      <div className="mt-6">
+
+      <div className="mt-8">
         {allowed ? (
-          <PdfViewer docId={(doc as DocumentRow).id} type={(doc as DocumentRow).type} />
+          <PdfViewer docId={doc.id} type={doc.type} />
         ) : (
-          <div className="rounded border bg-gray-50 p-8 text-center">
-            <p className="text-lg">🔒 Ce document est réservé aux abonnés.</p>
-            <Link
-              href="/abonnement"
-              className="mt-4 inline-block rounded bg-black px-4 py-2 text-white"
-            >
-              S’abonner
+          <div className="rounded-[var(--radius)] border border-border bg-surface px-6 py-14 text-center">
+            <p className="font-display text-lg font-semibold text-foreground">
+              Document réservé aux abonnés
+            </p>
+            <p className="mx-auto mt-2 max-w-[42ch] text-muted">
+              Abonnez-vous pour débloquer ce document et l’ensemble de la
+              bibliothèque premium.
+            </p>
+            <Link href="/abonnement" className={buttonClass({ className: 'mt-6' })}>
+              Voir l’abonnement
             </Link>
           </div>
         )}

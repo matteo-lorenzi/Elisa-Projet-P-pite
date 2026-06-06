@@ -44,7 +44,9 @@ yarn-error.log*
 /graphify-out/
 
 # guardrails / config Claude Code locaux (chemins machine-specifiques)
-/.claude/
+# on ignore tout sauf les skills design (versionnees avec le repo)
+/.claude/*
+!/.claude/skills/
 
 # typescript
 *.tsbuildinfo

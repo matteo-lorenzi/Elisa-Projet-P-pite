@@ -5,19 +5,36 @@ export function DocumentCard({ doc, locked }: { doc: DocumentRow; locked: boolea
   return (
     <Link
       href={`/bibliotheque/${doc.id}`}
-      className="block rounded border p-4 hover:shadow"
+      className="group flex flex-col rounded-[var(--radius)] border border-border bg-surface p-5 transition hover:border-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
     >
-      <div className="flex items-center justify-between">
-        <h2 className="font-semibold">{doc.title}</h2>
+      <div className="flex items-start justify-between gap-3">
+        <h2 className="font-display font-semibold leading-snug text-foreground">
+          {doc.title}
+        </h2>
         {doc.is_premium && (
-          <span className="text-sm">{locked ? '🔒 Premium' : '✓ Premium'}</span>
+          <span
+            className={`shrink-0 rounded-[var(--radius)] border px-2 py-0.5 text-xs font-medium ${
+              locked
+                ? 'border-border text-muted'
+                : 'border-accent text-accent'
+            }`}
+          >
+            {locked ? 'Premium' : 'Inclus'}
+          </span>
         )}
       </div>
-      {doc.description && <p className="mt-1 text-sm text-gray-600">{doc.description}</p>}
+      {doc.description && (
+        <p className="mt-2 line-clamp-3 text-sm text-muted">{doc.description}</p>
+      )}
       {doc.tags.length > 0 && (
-        <div className="mt-2 flex flex-wrap gap-1">
+        <div className="mt-3 flex flex-wrap gap-1.5">
           {doc.tags.map((t) => (
-            <span key={t} className="rounded bg-gray-100 px-2 py-0.5 text-xs">{t}</span>
+            <span
+              key={t}
+              className="rounded-[var(--radius)] border border-border bg-background px-2 py-0.5 text-xs text-muted"
+            >
+              {t}
+            </span>
           ))}
         </div>
       )}

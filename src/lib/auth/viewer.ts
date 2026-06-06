@@ -19,6 +19,11 @@ export async function getViewer(supabase: SupabaseClient): Promise<Viewer | null
 
   const { data: profile } = await supabase
     .from('profiles').select('*').eq('id', user.id).single();
+  // Authentifié mais profil illisible (session incohérente / cookie périmé) :
+  // on traite comme non connecté pour éviter un 500 en aval. requireViewer
+  // redirige alors vers /login, qui réécrit des cookies propres à la connexion.
+  if (!profile) return null;
+
   const { data: subscription } = await supabase
     .from('subscriptions').select('*').eq('user_id', user.id).maybeSingle();
 

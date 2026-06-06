@@ -1,26 +1,140 @@
 @import "tailwindcss";
 
+/* =========================================================================
+   VulgaRuRale — design tokens
+   Source de vérité: docs/design/identite.md (skill pepite-identite)
+   Aesthetic: éditorial documentaire, Restrained, accent bleu ardoise.
+   ========================================================================= */
+
+/* ---- 1. PRIMITIVES (OKLCH) — jamais consommées directement dans le markup ---- */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --p-paper:      oklch(0.985 0.002 255);
+  --p-surface:    oklch(0.965 0.004 255);
+  --p-ink:        oklch(0.20 0.02 255);
+  --p-muted:      oklch(0.50 0.02 255);
+  --p-accent:     oklch(0.45 0.12 255);
+  --p-accent-ink: oklch(0.985 0 0);
+  --p-border:     oklch(0.90 0.006 255);
+
+  /* États fonctionnels (hors accent de marque) — tint surface + texte AA + bord */
+  --p-success-text:    oklch(0.46 0.10 150);
+  --p-success-surface: oklch(0.955 0.030 150);
+  --p-success-border:  oklch(0.85 0.060 150);
+  --p-warning-text:    oklch(0.48 0.10 75);
+  --p-warning-surface: oklch(0.960 0.045 80);
+  --p-warning-border:  oklch(0.85 0.080 80);
+  --p-danger-text:     oklch(0.50 0.17 25);
+  --p-danger-surface:  oklch(0.955 0.030 25);
+  --p-danger-border:   oklch(0.85 0.060 25);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
+/* Mode sombre : suit le système, SAUF si l'utilisateur a forcé clair via le switch. */
 @media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  :root:not([data-theme="light"]) {
+    --p-paper:      oklch(0.17 0.012 255);
+    --p-surface:    oklch(0.21 0.014 255);
+    --p-ink:        oklch(0.96 0.003 255);
+    --p-muted:      oklch(0.68 0.02 255);
+    --p-accent:     oklch(0.70 0.12 255);
+    --p-accent-ink: oklch(0.17 0.012 255);
+    --p-border:     oklch(0.30 0.012 255);
+
+    --p-success-text:    oklch(0.80 0.12 150);
+    --p-success-surface: oklch(0.26 0.050 150);
+    --p-success-border:  oklch(0.40 0.070 150);
+    --p-warning-text:    oklch(0.83 0.11 80);
+    --p-warning-surface: oklch(0.27 0.050 80);
+    --p-warning-border:  oklch(0.42 0.080 80);
+    --p-danger-text:     oklch(0.78 0.13 25);
+    --p-danger-surface:  oklch(0.27 0.055 25);
+    --p-danger-border:   oklch(0.42 0.080 25);
   }
 }
 
+/* Override explicite du switch (gagne sur la préférence système). */
+:root[data-theme="dark"] {
+  --p-paper:      oklch(0.17 0.012 255);
+  --p-surface:    oklch(0.21 0.014 255);
+  --p-ink:        oklch(0.96 0.003 255);
+  --p-muted:      oklch(0.68 0.02 255);
+  --p-accent:     oklch(0.70 0.12 255);
+  --p-accent-ink: oklch(0.17 0.012 255);
+  --p-border:     oklch(0.30 0.012 255);
+
+  --p-success-text:    oklch(0.80 0.12 150);
+  --p-success-surface: oklch(0.26 0.050 150);
+  --p-success-border:  oklch(0.40 0.070 150);
+  --p-warning-text:    oklch(0.83 0.11 80);
+  --p-warning-surface: oklch(0.27 0.050 80);
+  --p-warning-border:  oklch(0.42 0.080 80);
+  --p-danger-text:     oklch(0.78 0.13 25);
+  --p-danger-surface:  oklch(0.27 0.055 25);
+  --p-danger-border:   oklch(0.42 0.080 25);
+}
+
+/* Forçage clair explicite (les primitives de :root sont déjà claires ; bloc
+   présent pour symétrie et pour garantir le recompile du thème). */
+:root[data-theme="light"] {
+  --p-paper:      oklch(0.985 0.002 255);
+  --p-surface:    oklch(0.965 0.004 255);
+  --p-ink:        oklch(0.20 0.02 255);
+  --p-muted:      oklch(0.50 0.02 255);
+  --p-accent:     oklch(0.45 0.12 255);
+  --p-accent-ink: oklch(0.985 0 0);
+  --p-border:     oklch(0.90 0.006 255);
+
+  --p-success-text:    oklch(0.46 0.10 150);
+  --p-success-surface: oklch(0.955 0.030 150);
+  --p-success-border:  oklch(0.85 0.060 150);
+  --p-warning-text:    oklch(0.48 0.10 75);
+  --p-warning-surface: oklch(0.960 0.045 80);
+  --p-warning-border:  oklch(0.85 0.080 80);
+  --p-danger-text:     oklch(0.50 0.17 25);
+  --p-danger-surface:  oklch(0.955 0.030 25);
+  --p-danger-border:   oklch(0.85 0.060 25);
+}
+
+/* ---- 2. TOKENS SÉMANTIQUES — génèrent bg-*, text-*, border-*, font-* ---- */
+@theme inline {
+  --color-background: var(--p-paper);
+  --color-surface:    var(--p-surface);
+  --color-foreground: var(--p-ink);
+  --color-muted:      var(--p-muted);
+  --color-accent:     var(--p-accent);
+  --color-accent-ink: var(--p-accent-ink);
+  --color-border:     var(--p-border);
+
+  --color-success:         var(--p-success-text);
+  --color-success-surface: var(--p-success-surface);
+  --color-success-border:  var(--p-success-border);
+  --color-warning:         var(--p-warning-text);
+  --color-warning-surface: var(--p-warning-surface);
+  --color-warning-border:  var(--p-warning-border);
+  --color-danger:          var(--p-danger-text);
+  --color-danger-surface:  var(--p-danger-surface);
+  --color-danger-border:   var(--p-danger-border);
+
+  --font-display: var(--font-bricolage), ui-sans-serif, system-ui, sans-serif;
+  --font-sans:    var(--font-source-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono:    ui-monospace, "SFMono-Regular", Menlo, monospace;
+
+  /* échelle typographique fluide (ratio ~1.25) */
+  --text-display: clamp(2.5rem, 6vw, 5rem);
+
+  /* UNE échelle de rayon verrouillée (shape lock) */
+  --radius: 0.625rem;
+
+  /* z-index sémantique — jamais 999/9999 */
+  --z-dropdown: 1000;
+  --z-sticky:   1100;
+  --z-modal:    1300;
+  --z-toast:    1400;
+}
+
+/* ---- 3. Base ---- */
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
 }
