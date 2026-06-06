@@ -1,14 +1,12 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import { requiredPublic } from '../env/public';
+import { env } from '../env/server';
 
 /**
  * Client Supabase service-role (contourne la RLS). À n'utiliser que côté serveur,
- * après une vérification d'accès explicite. Centralise la lecture des secrets :
- * un seul lieu lit l'URL et la clé service-role.
+ * après une vérification d'accès explicite. L'URL et la clé service-role passent
+ * par le seam env (public + serveur).
  */
 export function createServiceRoleClient(): SupabaseClient {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  if (!url) throw new Error('NEXT_PUBLIC_SUPABASE_URL manquant');
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!key) throw new Error('SUPABASE_SERVICE_ROLE_KEY manquant');
-  return createClient(url, key);
+  return createClient(requiredPublic('SUPABASE_URL'), env.SERVICE_ROLE_KEY);
 }
