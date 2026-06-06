@@ -1,9 +1,8 @@
 import { Resend } from 'resend';
+import { env } from './env/server';
 
 export function getResend(): Resend {
-  const key = process.env.RESEND_API_KEY;
-  if (!key) throw new Error('RESEND_API_KEY manquant');
-  return new Resend(key);
+  return new Resend(env.RESEND_API_KEY);
 }
 
 export interface OutgoingEmail {
@@ -19,8 +18,7 @@ export interface SendResult {
 
 /** Envoie une liste d'emails par lots de 100 (batch Resend). Un échec n'interrompt pas. */
 export async function sendBatch(emails: OutgoingEmail[]): Promise<SendResult> {
-  const from = process.env.NEWSLETTER_FROM;
-  if (!from) throw new Error('NEWSLETTER_FROM manquant');
+  const from = env.NEWSLETTER_FROM;
   const resend = getResend();
   let sent = 0;
   let failed = 0;

@@ -3,12 +3,10 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { stripe } from '@/lib/stripe';
+import { requiredPublic } from '@/lib/env/public';
+import { env } from '@/lib/env/server';
 
-function siteUrl(): string {
-  const base = process.env.NEXT_PUBLIC_SITE_URL;
-  if (!base) throw new Error('NEXT_PUBLIC_SITE_URL manquant');
-  return base;
-}
+const siteUrl = (): string => requiredPublic('SITE_URL');
 
 export async function createCheckoutSession() {
   const supabase = await createClient();
@@ -21,7 +19,7 @@ export async function createCheckoutSession() {
 
   const session = await stripe.checkout.sessions.create({
     mode: 'subscription',
-    line_items: [{ price: process.env.STRIPE_PRICE_ID!, quantity: 1 }],
+    line_items: [{ price: env.STRIPE_PRICE_ID, quantity: 1 }],
     customer: sub?.stripe_customer_id ?? undefined,
     customer_email: sub?.stripe_customer_id ? undefined : (user.email ?? undefined),
     subscription_data: { metadata: { user_id: user.id } },

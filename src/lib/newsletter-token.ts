@@ -1,13 +1,8 @@
 import { createHmac, timingSafeEqual } from 'node:crypto';
-
-function secret(): string {
-  const s = process.env.NEWSLETTER_UNSUBSCRIBE_SECRET;
-  if (!s) throw new Error('NEWSLETTER_UNSUBSCRIBE_SECRET manquant');
-  return s;
-}
+import { env } from './env/server';
 
 function hmac(userId: string): string {
-  return createHmac('sha256', secret()).update(userId).digest('hex');
+  return createHmac('sha256', env.NEWSLETTER_UNSUBSCRIBE_SECRET).update(userId).digest('hex');
 }
 
 /** Construit un token de désinscription "<userId>.<hmac>". */
