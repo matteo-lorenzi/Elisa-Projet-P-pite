@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import { signOut } from '@/app/auth/actions';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { SiteNavLinks } from '@/components/SiteNavLinks';
 
 // Applique le thème stocké avant le premier paint (évite le flash clair→sombre).
 const noFlashTheme = `(function(){try{var t=localStorage.getItem('theme');if(t==='dark'||t==='light'){document.documentElement.setAttribute('data-theme',t);}}catch(e){}})();`;
@@ -47,8 +48,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               VulgaRuRale
             </Link>
             <div className="flex items-center gap-5">
-              <Link href="/bibliotheque" className="text-muted transition hover:text-foreground">Bibliothèque</Link>
-              {isAdmin && <Link href="/admin/documents" className="text-muted transition hover:text-foreground">Admin</Link>}
+              <SiteNavLinks isAdmin={isAdmin} />
               {user ? (
                 <form action={signOut}><button className="text-muted transition hover:text-foreground">Déconnexion</button></form>
               ) : (

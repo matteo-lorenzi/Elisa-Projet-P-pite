@@ -26,7 +26,7 @@ export default function Home() {
                 Accéder à la bibliothèque
               </Link>
               <Link
-                href="/abonnement"
+                href="/tarifs"
                 className="inline-flex items-center justify-center rounded-[var(--radius)] border border-border px-5 py-3 font-medium text-foreground transition hover:bg-surface active:scale-[0.98] motion-reduce:transition-none motion-reduce:active:scale-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
               >
                 Voir l&rsquo;abonnement
